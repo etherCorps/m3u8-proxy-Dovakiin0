@@ -576,7 +576,8 @@ export async function proxyM3U8(url: string, headers: any, res: http.ServerRespo
                     const regex = /https?:\/\/[^\""\s]+/g;
                     const url = `${web_server_url}${"/ts-proxy?url=" + encodeURIComponent(regex.exec(line)?.[0] ?? "") + "&headers=" + encodeURIComponent(JSON.stringify(headers))}`;
                     newLines.push(line.replace(regex, url));
-                } else {
+                } else if (line.startsWith("#EXT-X-MEDIA:TYPE=AUDIO")) {}
+                else {
                     newLines.push(line);
                 }
             } else {
@@ -605,7 +606,9 @@ export async function proxyM3U8(url: string, headers: any, res: http.ServerRespo
                     const regex = /https?:\/\/[^\""\s]+/g;
                     const url = `${web_server_url}${"/ts-proxy?url=" + encodeURIComponent(regex.exec(line)?.[0] ?? "") + "&headers=" + encodeURIComponent(JSON.stringify(headers))}`;
                     newLines.push(line.replace(regex, url));
-                } else {
+                }
+                else if (line.startsWith("#EXT-X-MEDIA:TYPE=AUDIO")) {}
+                else {
                     newLines.push(line);
                 }
             } else {
@@ -649,6 +652,7 @@ export async function proxyTs(url: string, headers: any, req, res: http.ServerRe
         headers: {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.132 Safari/537.36",
             ...headers,
+            "origin": "https://megacloud.blog",
         },
     };
 
@@ -656,6 +660,9 @@ export async function proxyTs(url: string, headers: any, req, res: http.ServerRe
         const requestModule = forceHTTPS ? https : http;
         const proxy = requestModule.request(options, (r) => {
             r.headers["content-type"] = "video/mp2t";
+            r.headers["Access-Control-Allow-Origin"] = "*";
+            r.headers["Access-Control-Allow-Headers"] = "*";
+            r.headers["Access-Control-Allow-Methods"] = "*";
             res.writeHead(r.statusCode ?? 200, r.headers);
             r.pipe(res, { end: true });
         });
